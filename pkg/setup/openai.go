@@ -62,7 +62,7 @@ func getFixFromOpenAIWithMeta(command, errorMsg, meta string) (string, string) {
 					"properties": map[string]any{
 						"fix": map[string]string{
 							"type":        "string",
-							"description": "The terminal command to fix the issue",
+							"description": "Strictly just the terminal command to fix the issue",
 						},
 						"explanation": map[string]string{
 							"type":        "string",

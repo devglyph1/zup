@@ -141,8 +141,22 @@ func runCommandWithMode(command, mode string) error {
 			return fmt.Errorf("binary '%s' not found: %w", binary, err)
 		}
 		color.New(color.FgCyan).Printf("\n🚀 Running '%s' in background...\n", command)
-		backgroundCmd := fmt.Sprintf("nohup %s > background_command.log 2>&1 &", command)
-		return runCommand(backgroundCmd, true)
+		// Write the command to a temporary shell script
+		tmpFile, err := os.CreateTemp("", "zup-bg-*.sh")
+		if err != nil {
+			return fmt.Errorf("failed to create temp script: %w", err)
+		}
+		defer tmpFile.Close()
+		// Use login shell to ensure PATH and environment are loaded
+		scriptContent := fmt.Sprintf("#!/bin/zsh -l\n%s\n", command)
+		if _, err := tmpFile.WriteString(scriptContent); err != nil {
+			return fmt.Errorf("failed to write to temp script: %w", err)
+		}
+		if err := tmpFile.Chmod(0755); err != nil {
+			return fmt.Errorf("failed to chmod temp script: %w", err)
+		}
+		cmd := exec.Command("open", "-a", "Terminal", tmpFile.Name())
+		return cmd.Run()
 	default:
 		return runCommand(command, false)
 	}
